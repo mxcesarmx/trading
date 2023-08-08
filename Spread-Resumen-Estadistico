@@ -1,0 +1,38 @@
+import yfinance as yf
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the ticker symbol and the period of interest
+ticker_symbol = "NQ=F"
+start_date = "2023-01-01"
+end_date = "2023-07-12"
+
+# Retrieve historical data using yfinance
+data = yf.download(ticker_symbol, start=start_date, end=end_date, interval='1d')
+
+# Calculate the difference between High and Low prices
+price_difference = data['High'] - data['Low']
+
+# Calculate summary statistics
+mean_price_diff = np.mean(price_difference)
+std_price_diff = np.std(price_difference)
+min_price_diff = np.min(price_difference)
+max_price_diff = np.max(price_difference)
+
+# Plot the price difference
+plt.figure(figsize=(10, 6))
+plt.plot(price_difference)
+plt.axhline(mean_price_diff, color='r', linestyle='--', label='Mean')
+plt.axhline(mean_price_diff + std_price_diff, color='g', linestyle='--', label='Mean + Std Dev')
+plt.axhline(mean_price_diff - std_price_diff, color='g', linestyle='--', label='Mean - Std Dev')
+plt.xlabel('Trading Days')
+plt.ylabel('Price Difference')
+plt.title('Price Difference (High - Low)')
+plt.grid(True)
+plt.legend()
+
+# Add summary statistics text
+stats_text = f"Mean: {mean_price_diff:.4f}\nStd Dev: {std_price_diff:.4f}\nMin: {min_price_diff:.4f}\nMax: {max_price_diff:.4f}"
+plt.text(0.02, 0.95, stats_text, transform=plt.gca().transAxes, verticalalignment='top')
+
+plt.show()

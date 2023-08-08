@@ -1,0 +1,63 @@
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from tslearn.clustering import TimeSeriesKMeans
+
+def fetch_stock_data(stock_symbol, interval, start_date, end_date):
+    data = yf.download(stock_symbol, interval=interval, start=start_date, end=end_date)
+    return data
+
+def calculate_price_difference(data):
+    data['Price_Difference'] = data['High'] - data['Low']
+
+def preprocess_data(data):
+    # Convert the price difference column into a 2D numpy array (time series data)
+    X = np.expand_dims(data['Price_Difference'].values, axis=-1)
+
+    # Standardize the data to have mean=0 and standard deviation=1
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    return X_scaled
+
+def time_series_clustering(X, n_clusters):
+    # Perform Time Series Clustering using k-means
+    model = TimeSeriesKMeans(n_clusters=n_clusters, verbose=True, random_state=42)
+    y_pred = model.fit_predict(X)
+
+    return y_pred
+
+def plot_clustering_results(data, cluster_labels, stock_symbol):
+    plt.figure(figsize=(10, 6))
+    for i in np.unique(cluster_labels):
+        cluster_data = data[cluster_labels == i]
+        cluster_stats = cluster_data['Price_Difference'].describe()
+        plt.plot(cluster_data.index, cluster_data['Price_Difference'], label=f'Cluster {i+1} ({len(cluster_data)})', linewidth=2)
+        plt.scatter(cluster_data.index, cluster_data['Price_Difference'], s=50, marker='o', edgecolors='k')
+        plt.text(cluster_data.index[-1], cluster_stats['mean'], f"Mean: {cluster_stats['mean']:.2f}\nStd: {cluster_stats['std']:.2f}\nMin: {cluster_stats['min']:.2f}\nMax: {cluster_stats['max']:.2f}", fontsize=10, ha='right', va='center')
+    plt.xlabel('Date')
+    plt.ylabel('Price Difference')
+    plt.title(f'Time Series Clustering for {stock_symbol}')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+def main():
+    stock_symbol = 'ETH-USD'
+    interval = '1d'
+    start_date = '2023-01-01'
+    end_date = '2023-07-28'
+    n_clusters = 3
+
+    data = fetch_stock_data(stock_symbol, interval, start_date, end_date)
+    calculate_price_difference(data)
+
+    X = preprocess_data(data)
+    cluster_labels = time_series_clustering(X, n_clusters)
+
+    plot_clustering_results(data, cluster_labels, stock_symbol)
+
+if __name__ == "__main__":
+    main()

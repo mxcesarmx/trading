@@ -1,0 +1,43 @@
+#Este código calcula la curva de Distribución Normal de Precio vs Volumen
+import yfinance as yf
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+
+def plot_distribution_and_volume(ticker, start_date, end_date, interval):
+    # Download historical stock data
+    data = yf.download(ticker, start=start_date, end=end_date, interval=interval)
+
+    # Extract closing prices and volume data
+    closing_prices = data['Close']
+    volume = data['Volume']
+
+    # Calculate the normal distribution parameters and curve
+    mu = closing_prices.mean()
+    sigma = closing_prices.std()
+    x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+    y = stats.norm.pdf(x, mu, sigma)
+
+    # Plot the distribution curve
+    plt.figure(figsize=(12, 6))
+    plt.plot(x, y, color="blue", label="Price Distribution")
+    plt.xlabel("Price")
+    plt.ylabel("Probability Density")
+    plt.title(f"Price Distribution of {ticker}")
+    plt.grid(True)
+
+    # Overlay the volume data as bars on a secondary axis
+    ax2 = plt.twinx()
+    ax2.bar(closing_prices, volume, color="red", alpha=0.5, label="Volume")
+    ax2.set_ylabel("Volume")
+    ax2.legend(loc="upper right")
+
+    plt.show()
+
+if __name__ == "__main__":
+    ticker = "ES=F"  # Replace with the stock symbol you want to analyze
+    start_date = "2023-07-18"  # Replace with the desired start date
+    end_date = "2023-07-23"    # Replace with the desired end date
+    interval = "15m"  # Daily interval
+
+    plot_distribution_and_volume(ticker, start_date, end_date, interval)

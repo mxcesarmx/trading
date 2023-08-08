@@ -1,0 +1,47 @@
+#Código para generar los retornos o "Swing" de un activo con Yfinance y graficar los resultados
+
+import yfinance as yf
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Define the ticker symbol, start date, end date, and interval of interest
+ticker_symbol = "ETH-USD"
+start_date = "2020-01-01"
+end_date = "2023-06-30"
+interval = "1mo"  # '1d' for daily data, '1wk' for weekly data, '1mo' for monthly data
+
+# Retrieve historical data using yfinance
+data = yf.download(ticker_symbol, start=start_date, end=end_date, interval=interval)
+
+# Calculate the logarithmic daily returns
+log_returns = np.log(data['Close'] / data['Close'].shift(1))
+
+# Convert the logarithmic returns to percentage returns
+percentage_returns = log_returns * 100
+
+# Calculate summary statistics for price difference
+mean_price_diff = np.mean(percentage_returns)
+std_price_diff = np.std(percentage_returns)
+min_price_diff = np.min(percentage_returns)
+max_price_diff = np.max(percentage_returns)
+
+# Plot the price difference
+plt.figure(figsize=(10, 6))
+plt.plot(percentage_returns, marker='o')
+plt.plot(percentage_returns)
+plt.axhline(mean_price_diff, color='r', linestyle='--', label='Mean')
+plt.axhline(mean_price_diff + std_price_diff, color='g', linestyle='--', label='Mean + Std Dev')
+plt.axhline(mean_price_diff - std_price_diff, color='g', linestyle='--', label='Mean - Std Dev')
+plt.xlabel('Time')
+plt.ylabel('Percentage Returns')
+plt.title('Returns')
+plt.grid(True)
+plt.legend()
+
+
+# Add summary statistics text for log price difference ratio
+price_diff_stats_text = f"Mean: {mean_price_diff:.4f}\nStd Dev: {std_price_diff:.4f}\nMin: {min_price_diff:.4f}\nMax: {max_price_diff:.4f}"
+plt.text(0.02, 0.95, price_diff_stats_text, transform=plt.gca().transAxes, verticalalignment='top')
+
+plt.show()

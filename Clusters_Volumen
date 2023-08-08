@@ -1,0 +1,56 @@
+#Código para construir clusters de volumen
+
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+def fetch_stock_data(symbol, interval, start_date, end_date):
+    data = yf.download(symbol, interval=interval, start=start_date, end=end_date)
+    return data
+
+def time_series_clustering(data, num_clusters):
+    volume_data = data['Volume'].values.reshape(-1, 1)
+    
+    # Standardize the data before clustering
+    scaler = StandardScaler()
+    volume_data = scaler.fit_transform(volume_data)
+    
+    # Perform Time Series Clustering using k-means
+    kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+    data['Cluster'] = kmeans.fit_predict(volume_data)
+    
+    return data
+
+def plot_clusters(data, symbol):
+    plt.figure(figsize=(12, 6))
+    
+    for cluster in data['Cluster'].unique():
+        cluster_data = data[data['Cluster'] == cluster]
+        plt.plot(cluster_data.index, cluster_data['Volume'], label=f'Cluster {cluster+1}')
+
+    plt.xlabel('Date')
+    plt.ylabel('Volume')
+    
+    plt.title(f'Time Series Clustering of Volume for {symbol}')
+    plt.legend()
+    plt.show()
+
+if __name__ == "__main__":
+    # Set your desired parameters
+    symbol = 'ETH-USD'  # Replace with the desired stock symbol
+    interval = '1h'  # Choose from: '5m', '15m', '1h', etc.
+    start_date = '2023-07-23'
+    end_date = '2023-07-29'
+    num_clusters = 3  # Number of clusters for k-means
+
+    # Step 1: Fetch historical stock data
+    stock_data = fetch_stock_data(symbol, interval, start_date, end_date)
+
+    # Step 2: Time Series Clustering
+    clustered_data = time_series_clustering(stock_data, num_clusters)
+
+    # Step 3: Visualize the results
+    plot_clusters(clustered_data, symbol)

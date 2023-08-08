@@ -1,0 +1,57 @@
+#Simulación para calcular los extremos de volatilidad
+
+import yfinance as yf
+import numpy as np
+import matplotlib.pyplot as plt
+
+def fetch_financial_data(symbol, start, end):
+    data = yf.download(symbol, start=start, end=end)
+    return data
+
+def calculate_price_difference(data):
+    high_prices = data['High'].values
+    low_prices = data['Low'].values
+    price_diff = high_prices - low_prices
+    return price_diff
+
+def generate_monte_carlo_simulation(price_diff, num_simulations, num_periods):
+    simulated_price_diff = np.zeros((num_periods, num_simulations))
+    for i in range(num_simulations):
+        simulated_price_diff[:, i] = np.random.choice(price_diff, size=num_periods, replace=True)
+    return simulated_price_diff
+
+def plot_monte_carlo_simulation(data, simulated_price_diff):
+    mean_diff = np.mean(simulated_price_diff, axis=1)
+    std_diff = np.std(simulated_price_diff, axis=1)
+    min_diff = np.min(simulated_price_diff, axis=1)
+    max_diff = np.max(simulated_price_diff, axis=1)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(data.index, mean_diff, label='Mean')
+    plt.fill_between(data.index, mean_diff - std_diff, mean_diff + std_diff, alpha=0.3, label='Standard Deviation')
+    plt.plot(data.index, min_diff, label='Min')
+    plt.plot(data.index, max_diff, label='Max')
+    plt.xlabel('Date')
+    plt.ylabel('Price Difference')
+    plt.title('Monte Carlo Simulation of Price Difference')
+    plt.legend()
+    plt.show()
+
+# Example usage
+symbol = "NQ=F"
+start = "2023-01-01"
+end = "2023-07-11"
+num_simulations = 1000
+
+# Fetch financial data
+data = fetch_financial_data(symbol, start, end)
+
+# Calculate the price difference
+price_diff = calculate_price_difference(data)
+
+# Generate Monte Carlo simulation
+num_periods = len(data)
+simulated_price_diff = generate_monte_carlo_simulation(price_diff, num_simulations, num_periods)
+
+# Plot Monte Carlo simulation
+plot_monte_carlo_simulation(data, simulated_price_diff)

@@ -1,0 +1,44 @@
+#Este código genera una matriz donde muestra la correlación entre volumen y volatilidad.
+
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the stock symbol and the desired period and interval
+stock_symbol = "ETH-USD"
+start_date = "2023-01-01"
+end_date = "2023-07-15"
+interval = "1d"
+
+# Download the stock data using yfinance
+stock_data = yf.download(stock_symbol, start=start_date, end=end_date, interval=interval)
+
+# Calculate the difference between High and Low prices
+stock_data["Price_Difference"] = stock_data["High"] - stock_data["Low"]
+
+# Calculate the logarithm ratio between previous High and Low difference
+stock_data["Previous_Price_Log_Ratio"] = np.log(stock_data["Price_Difference"] / stock_data["Price_Difference"].shift(1))
+
+# Calculate the logarithm ratio between last and previous Volume
+stock_data["Volume_Log_Ratio"] = np.log(stock_data["Volume"] / stock_data["Volume"].shift(1))
+
+# Generate a scatter plot of the data
+plt.figure(figsize=(10, 6))
+plt.scatter(stock_data["Volume_Log_Ratio"], stock_data["Previous_Price_Log_Ratio"], c='blue', alpha=0.5)
+
+# Highlight the last point
+last_point = stock_data.iloc[-1]
+plt.scatter(last_point["Volume_Log_Ratio"], last_point["Previous_Price_Log_Ratio"], c='red', marker='o')
+
+# Add a line at coordinates (0, 0)
+plt.axhline(0, color='black', linestyle='--')
+plt.axvline(0, color='black', linestyle='--')
+
+# Set labels and title
+plt.xlabel("Volume")
+plt.ylabel("Spread")
+plt.title(f"Scatter Plot - {stock_symbol} - {start_date} to {end_date}")
+
+# Show the plot
+plt.show()

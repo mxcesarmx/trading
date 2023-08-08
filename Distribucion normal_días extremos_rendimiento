@@ -1,0 +1,36 @@
+import yfinance as yf
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Define the ticker symbol, date range, and interval of interest
+ticker_symbol = "ETH-USD"
+start_date = "2023-01-01"
+end_date = "2023-07-13"
+interval = "1d"  # '1d' for daily data, '1wk' for weekly data, '1mo' for monthly data
+
+# Retrieve historical data using yfinance
+data = yf.download(ticker_symbol, start=start_date, end=end_date, interval=interval)
+
+# Calculate the ratio between last close and previous open in logarithmic form
+price_ratio = np.log(data['Close'] / data['Open'].shift(1))
+
+# Generate the normal distribution of the ratio values in percentages
+mean_ratio = np.mean(price_ratio)
+std_ratio = np.std(price_ratio)
+normal_distribution = np.random.normal(mean_ratio, std_ratio, len(price_ratio)) * 100
+
+# Plot the histogram of the ratio values
+plt.figure(figsize=(10, 6))
+sns.histplot(price_ratio, kde=True, color='blue', label='Price Ratio')
+sns.histplot(normal_distribution, kde=True, color='orange', label='Normal Distribution')
+plt.xlabel('Logarithmic Price Ratio')
+plt.ylabel('Frequency')
+plt.title('Ratio Distribution')
+plt.legend()
+
+# Calculate summary statistics for the ratio
+summary_stats = f"Mean: {mean_ratio:.4f}\nStd Dev: {std_ratio:.4f}\nMin: {np.min(price_ratio):.4f}\nMax: {np.max(price_ratio):.4f}"
+plt.text(0.02, 0.95, summary_stats, transform=plt.gca().transAxes, verticalalignment='top')
+
+plt.show()
